@@ -1,0 +1,150 @@
+﻿@{
+    Layout = "";
+
+    var gridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSize;
+}
+@using Nop.Core.Infrastructure;
+@using Nop.Web.Framework;
+@using Nop.Web.Framework.Mvc;
+
+<style type="text/css">
+    .cache-value {
+        display: none;
+        max-height: 250px;
+        max-width: 600px;
+        overflow: auto;
+        border: 1px solid #999;
+        padding: 3px;
+    }
+</style>
+
+<table class="adminContent">
+    <tbody>
+        <tr>
+            <td>
+                <p>
+                    @T(Nop.Plugin.Misc.CacheAnalytics.Code.Constants.ResourceIntroPart1)
+                    <br />
+                    @T(Nop.Plugin.Misc.CacheAnalytics.Code.Constants.ResourceIntroPart2)
+                    <br />
+                    @T(Nop.Plugin.Misc.CacheAnalytics.Code.Constants.ResourceIntroPart3)
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="cacheItems"></div>
+
+                <script type="text/javascript">
+                    var totalCacheSize = 0;
+
+                    $(document).ready(function () {
+                        $("#cacheItems").kendoGrid({
+                            dataSource: {
+                                type: "json",
+                                transport: {
+                                    read: {
+                                        url: "@Html.Raw(Url.Action("CacheItems", "MiscCacheAnalytics", new RouteValueDictionary() { { "Namespaces", "Nop.Plugin.Misc.CacheAnalytics.Controllers" }, { "area", "" } }))",
+                                        type: "POST",
+                                        dataType: "json"
+                                    },
+                                    destroy: {
+                                        url: "@Html.Raw(Url.Action("DeleteCacheItem", "MiscCacheAnalytics", new RouteValueDictionary() { { "Namespaces", "Nop.Plugin.Misc.CacheAnalytics.Controllers" }, { "area", "" } }))",
+                                        type: "POST",
+                                        dataType: "json"
+                                    }
+                                },
+                                schema: {
+                                    data: "Data",
+                                    total: "Total",
+                                    errors: "Errors",
+                                    model: {
+                                            id: "Key",
+                                            fields: {
+                                                Key: { editable: false, type: "string" }, 
+                                                Type: { editable: false, type: "string" }, 
+                                                Value: { editable: false, type: "string" },
+                                                ExpiryDate: { editable: false, type: "date" },
+                                                Size: { editable: false, type: "number" },
+                                            }
+                                    }
+                                },
+                                requestEnd: function (e) {
+                                    if (e.type == "read") {
+                                        var response = e.response;
+                                        if (response) {
+                                            //store extra data
+                                            totalCacheSize = e.response["ExtraData"];
+                                        }
+                                    }
+                                },
+                                error: function (e) {
+                                    display_kendoui_grid_error(e);
+                                    // Cancel the changes
+                                    this.cancelChanges();
+                                },
+                                pageSize: @(gridPageSize),
+                                serverPaging: true,
+                                serverFiltering: true,
+                                serverSorting: true
+                            },
+                            pageable: {
+                                refresh: true
+                            },
+                            editable: {
+                                confirmation: false,
+                                mode: "inline"
+                            },
+                            dataBound: function(e) {
+                                $("#aggregator-cache-total").text(kendo.toString(totalCacheSize / 1024, "##,#") + " kB");
+                            },
+                            scrollable: false,
+                            columns: [{
+                                    field: "Key",
+                                    title: "Key",
+                                    width: 300
+                                }, {
+                                    field: "Value",
+                                    title: "Value",
+                                    template: function(dataItem) {
+                                        return kendo.htmlEncode(dataItem.Type) + 
+                                               (dataItem.Count !== null ? " (" + dataItem.Count + " items)" : "") +
+                                               "<br /><a href=\"#\" class=\"cache-toggle\">Show</a>" +
+                                               "<pre class=\"cache-value\">" + 
+                                               kendo.htmlEncode(dataItem.Value) + 
+                                               "</pre>";
+                                    }
+                                }, {
+                                    field: "Size",
+                                    title: "Size (estimate in bytes)",
+                                    format: "{0:##,#}",
+                                    width: 100,
+                                    footerTemplate: "<div><span id=\"aggregator-cache-total\"></span></div>"
+                                }, {
+                                    field: "ExpiryDate",
+                                    title: "Expiry Date",
+                                    format: "{0:G}",
+                                    width: 150
+                                }, {
+                                    command: [{
+                                        name: "destroy",
+                                        text: "@T("Admin.Common.Delete")"
+                                    }],
+                                    width: 100
+                                }]
+                        }); 
+
+                        $("#cacheItems").on("click", ".cache-toggle", function(e) {
+                            var cacheValue = $(this).next(".cache-value");                            
+                            cacheValue.toggle();
+                            $(this).text(cacheValue.is(':visible') ? 'Hide' : 'Show');
+
+                            e.preventDefault();
+                            return false;
+                        });
+                    });
+                </script>                        
+            </td>
+        </tr>
+    </tbody>
+</table>
