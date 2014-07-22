@@ -4,7 +4,7 @@ The Cache Analytics plugin displays the objects stored in the ASP.NET MemoryCach
 It has the option to delete individual items from the cache, and displays an estimated size of each stored object.
 
 ###Compatibility
-This plugin is compatible with nopCommerce v3.30 (v1.0).
+This plugin is compatible with nopCommerce v3.30 (v1.0) an v3.40 (v1.1).
 
 If you require a version of the plugin that is compatible with an older version of nopCommerce, feel free to get in touch.
 
