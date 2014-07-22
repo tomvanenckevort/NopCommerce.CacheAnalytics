@@ -27,7 +27,7 @@ namespace Nop.Plugin.Misc.CacheAnalytics.Controllers
         [ChildActionOnly]
         public ActionResult Configure()
         {
-            return View("Nop.Plugin.Misc.CacheAnalytics.Views.MiscCacheAnalytics.Configure");
+            return View("~/Plugins/Misc.CacheAnalytics/Views/MiscCacheAnalytics/Configure.cshtml");
         }
 
         #endregion
